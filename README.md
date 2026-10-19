@@ -8,3 +8,6 @@ El contenido editable (sucursales, WhatsApp, horario, servicios e Instagram) est
 |-----|--------|
 | Logo | `images/logo.jpg` |
 | Foto principal | `images/hero.jpg` |
+| Equipo | `images/team.jpg` |
+| Interior | `images/interior.jpg` |
+| Cortes | `images/gallery/` |
