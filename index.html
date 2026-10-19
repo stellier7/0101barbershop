@@ -14,6 +14,7 @@
   :root{
     --cream:      #000000;
     --cream-2:    #0A0A0A;
+    --gray-light: #141414;
     --ink:        #FFFFFF;
     --ink-soft:   #B7B7B7;
     --ink-faint:  #737373;
@@ -674,6 +675,200 @@
   .location-option-name{ font-family:'Cinzel', serif; font-size:18px; }
   .location-option-meta{ font-size:13.5px; color:var(--ink-soft); }
 
+  .nav-actions{
+    display:flex; align-items:center; gap:10px;
+  }
+  .nav-cart{
+    position:relative;
+    display:inline-flex; align-items:center; justify-content:center;
+    width:42px; height:42px; border-radius:50%;
+    border:1.5px solid var(--line);
+    color:var(--ink); background:transparent; flex:none;
+    transition:transform .3s var(--ease-snap), background .25s, border-color .25s;
+  }
+  .nav-cart:hover{
+    transform:translateY(-2px);
+    background:var(--accent-hover);
+    border-color:var(--line-strong);
+  }
+  .nav-cart svg{ width:18px; height:18px; }
+  .nav-cart-count{
+    position:absolute; top:-4px; right:-4px;
+    min-width:18px; height:18px; padding:0 5px;
+    border-radius:100px;
+    background:var(--gold); color:var(--accent-inv);
+    font-size:10px; font-weight:700;
+    display:grid; place-items:center; line-height:1;
+  }
+  .nav-cart-count:empty,
+  .nav-cart-count[hidden]{ display:none; }
+
+  body.cart-open{ overflow:hidden; }
+  .cart-drawer{
+    position:fixed; inset:0; z-index:230;
+    display:grid; justify-items:end;
+  }
+  .cart-drawer[hidden]{ display:none !important; }
+  .cart-drawer-backdrop{
+    position:absolute; inset:0;
+    background:rgba(0,0,0,0.72);
+    border:none; padding:0; cursor:pointer;
+  }
+  .cart-drawer-panel{
+    position:relative; z-index:1;
+    width:min(420px, 100%); height:100%;
+    background:#0C0C0C;
+    border-left:1px solid var(--line);
+    box-shadow:var(--shadow-lg);
+    display:flex; flex-direction:column;
+    padding:22px 20px 20px;
+    animation:cart-slide-in .35s var(--ease);
+  }
+  @keyframes cart-slide-in{
+    from{ transform:translateX(18px); opacity:.6; }
+    to{ transform:translateX(0); opacity:1; }
+  }
+  .cart-drawer-head{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    margin-bottom:18px;
+  }
+  .cart-drawer-head h2{ font-size:28px; margin:0; }
+  .cart-drawer-close{
+    width:40px; height:40px; border-radius:50%;
+    border:1px solid var(--line);
+    display:grid; place-items:center;
+    background:transparent; color:var(--ink);
+  }
+  .cart-drawer-close svg{ width:16px; height:16px; }
+  .cart-drawer-body{
+    flex:1; overflow:auto;
+    display:flex; flex-direction:column; gap:14px;
+  }
+  .cart-empty{ color:var(--ink-soft); font-size:15px; margin:24px 0; }
+  .cart-line{
+    display:grid; grid-template-columns:72px 1fr; gap:12px; align-items:center;
+    padding-bottom:14px; border-bottom:1px solid var(--line);
+  }
+  .cart-line-media{
+    position:relative; overflow:hidden; aspect-ratio:1;
+    border-radius:12px; border:1px solid var(--line); background:var(--gray-light);
+  }
+  .cart-line-media img{
+    position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+  }
+  .cart-line-name{
+    font-family:'Cinzel', serif; font-size:15px; line-height:1.25; margin:0 0 4px;
+  }
+  .cart-line-cat{
+    font-size:11px; font-weight:600; letter-spacing:0.08em;
+    text-transform:uppercase; color:var(--ink-faint); margin:0 0 10px;
+  }
+  .cart-line-controls{ display:flex; align-items:center; gap:8px; }
+  .cart-qty-btn{
+    width:30px; height:30px; border-radius:50%;
+    border:1.5px solid var(--line-strong);
+    display:grid; place-items:center;
+    background:transparent; color:var(--ink); font-size:16px;
+  }
+  .cart-qty{ min-width:1.5ch; text-align:center; font-weight:600; font-size:14px; }
+  .cart-line-remove{
+    margin-left:auto; font-size:12.5px; font-weight:600;
+    color:var(--ink-faint); text-decoration:underline; text-underline-offset:2px;
+    background:transparent; border:0; padding:0;
+  }
+  .cart-drawer-foot{
+    display:flex; flex-direction:column; gap:10px;
+    padding-top:16px; border-top:1px solid var(--line); margin-top:8px;
+  }
+  .cart-drawer-foot .btn{ width:100%; justify-content:center; }
+  .cart-clear{
+    font-size:13px; font-weight:600; color:var(--ink-soft);
+    text-align:center; background:transparent; border:0;
+  }
+
+  #productos{ padding-top:100px; padding-bottom:100px; }
+  .products-marquee{
+    position:relative;
+    margin:0 calc(-1 * clamp(20px,5vw,64px));
+    padding:8px 0 28px;
+    --marquee-fade:clamp(28px,6vw,72px);
+    -webkit-mask-image:linear-gradient(to right, transparent 0, #000 var(--marquee-fade), #000 calc(100% - var(--marquee-fade)), transparent 100%);
+    mask-image:linear-gradient(to right, transparent 0, #000 var(--marquee-fade), #000 calc(100% - var(--marquee-fade)), transparent 100%);
+  }
+  .products-marquee-track{
+    display:flex; gap:18px; width:max-content;
+    will-change:transform;
+    animation:product-marquee 42s linear infinite;
+  }
+  .products-marquee.is-paused .products-marquee-track{ animation-play-state:paused; }
+  .products-marquee.is-reduced{
+    -webkit-mask-image:none; mask-image:none;
+    overflow-x:auto; overscroll-behavior-x:contain;
+    -webkit-overflow-scrolling:touch;
+    scroll-snap-type:x proximity;
+    padding-inline:clamp(20px,5vw,64px);
+    margin:0;
+  }
+  .products-marquee.is-reduced .products-marquee-track{ animation:none; }
+  .products-marquee.is-reduced .product-card{ scroll-snap-align:start; }
+  @keyframes product-marquee{
+    from{ transform:translateX(0); }
+    to{ transform:translateX(-50%); }
+  }
+  .product-card{
+    display:flex; flex-direction:column; gap:14px;
+    width:clamp(220px,28vw,280px);
+    flex:0 0 clamp(220px,28vw,280px);
+    text-align:left; color:inherit; font:inherit;
+  }
+  .product-media{
+    position:relative; overflow:hidden;
+    aspect-ratio:1; width:100%;
+    border-radius:18px;
+    background:var(--gray-light);
+    border:1px solid var(--line);
+  }
+  .product-media img{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    object-fit:contain;
+    background:#fff;
+  }
+  .product-card-body{
+    display:flex; flex-direction:column; gap:6px; padding:0 4px;
+  }
+  .product-tag{
+    font-size:11.5px; font-weight:600; letter-spacing:0.08em;
+    text-transform:uppercase; color:var(--gold);
+  }
+  .product-name{
+    font-family:'Cinzel', serif; font-size:17px; font-weight:600;
+    line-height:1.25; margin:0;
+  }
+  .product-teaser{
+    margin:0; font-size:13.5px; color:var(--ink-soft); line-height:1.4;
+  }
+  .product-price{
+    font-size:14px; font-weight:600; color:var(--gold); margin:0;
+  }
+  .product-card-actions{ display:flex; gap:8px; margin-top:4px; }
+  .product-card-add{
+    font-size:12.5px; font-weight:600;
+    padding:8px 12px; border-radius:100px;
+    border:1.5px solid var(--line-strong);
+    color:var(--ink); background:transparent;
+    transition:background .25s, border-color .25s, transform .25s var(--ease-snap);
+  }
+  .product-card-add:hover{
+    background:var(--accent-hover);
+    border-color:var(--gold);
+    transform:translateY(-1px);
+  }
+  .product-card-add.is-added{
+    border-color:var(--gold);
+    background:var(--accent-hover);
+  }
+
   @media (max-width: 900px){
     .about-grid, .contact-grid, .maps-grid, .testimonials-grid{ grid-template-columns:1fr; }
     .gallery-grid{ grid-template-columns:1fr 1fr; }
@@ -705,10 +900,12 @@
       <img src="images/logo.jpg" alt="" class="nav-logo" width="52" height="52">
       <span>0101 <em>Barbershop</em></span>
     </a>
-    <button type="button" class="nav-cta" id="nav-whatsapp" aria-haspopup="dialog" aria-label="Elegir sucursal de WhatsApp">
-      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.46 1.32 4.96L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.21h.01c5.46 0 9.9-4.45 9.9-9.91 0-2.65-1.03-5.13-2.9-7C17.18 3.03 14.7 2 12.04 2Zm0 18.14h-.01a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.23 8.23 0 0 1-1.26-4.37c0-4.55 3.7-8.25 8.26-8.25 2.2 0 4.27.86 5.83 2.42a8.18 8.18 0 0 1 2.41 5.84c0 4.55-3.71 8.22-8.25 8.22Zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.4-.12-.56.13-.17.25-.65.81-.79.97-.15.17-.29.19-.54.06-.25-.12-1.04-.38-1.99-1.22-.73-.66-1.23-1.46-1.37-1.71-.15-.25-.02-.38.11-.51.11-.11.25-.29.37-.44.12-.15.16-.25.24-.42.08-.17.04-.31-.02-.44-.06-.12-.56-1.34-.76-1.84-.2-.48-.4-.42-.56-.42h-.48c-.17 0-.44.06-.67.31-.23.25-.87.85-.87 2.08 0 1.22.89 2.4 1.02 2.57.12.17 1.75 2.67 4.24 3.75.59.26 1.06.41 1.42.52.6.19 1.14.16 1.57.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.08.15-1.18-.06-.1-.23-.16-.48-.28Z"/></svg>
-      <span>WhatsApp</span>
-    </button>
+    <div class="nav-actions">
+      <button type="button" class="nav-cta" id="nav-whatsapp" aria-haspopup="dialog" aria-label="Elegir sucursal de WhatsApp">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.46 1.32 4.96L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.21h.01c5.46 0 9.9-4.45 9.9-9.91 0-2.65-1.03-5.13-2.9-7C17.18 3.03 14.7 2 12.04 2Zm0 18.14h-.01a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.23 8.23 0 0 1-1.26-4.37c0-4.55 3.7-8.25 8.26-8.25 2.2 0 4.27.86 5.83 2.42a8.18 8.18 0 0 1 2.41 5.84c0 4.55-3.71 8.22-8.25 8.22Zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.4-.12-.56.13-.17.25-.65.81-.79.97-.15.17-.29.19-.54.06-.25-.12-1.04-.38-1.99-1.22-.73-.66-1.23-1.46-1.37-1.71-.15-.25-.02-.38.11-.51.11-.11.25-.29.37-.44.12-.15.16-.25.24-.42.08-.17.04-.31-.02-.44-.06-.12-.56-1.34-.76-1.84-.2-.48-.4-.42-.56-.42h-.48c-.17 0-.44.06-.67.31-.23.25-.87.85-.87 2.08 0 1.22.89 2.4 1.02 2.57.12.17 1.75 2.67 4.24 3.75.59.26 1.06.41 1.42.52.6.19 1.14.16 1.57.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.08.15-1.18-.06-.1-.23-.16-.48-.28Z"/></svg>
+        <span>WhatsApp</span>
+      </button>
+    </div>
   </nav>
 
   <header class="hero" id="top">
@@ -785,6 +982,19 @@
       </div>
       <div class="services-accordion" id="services-grid"></div>
       <p class="pricing-note" data-reveal><b>Lempiras.</b> El degradado va incluido en el corte.</p>
+    </div>
+  </section>
+
+  <section id="productos">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="kicker" data-reveal>Tienda</div>
+        <h2 data-reveal style="--delay:.05s">Productos en el local</h2>
+        <p data-reveal style="--delay:.1s">American Crew y Maxybelt para llevar el corte a casa. Pedí por WhatsApp.</p>
+      </div>
+      <div class="products-marquee" id="products-marquee" data-reveal style="--delay:.12s">
+        <div class="products-marquee-track" data-marquee-track></div>
+      </div>
     </div>
   </section>
 
@@ -867,11 +1077,12 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg>
       </button>
       <p class="location-picker-kicker" id="location-picker-title">¿En cuál sucursal?</p>
-      <p class="location-picker-hint">Te abrimos WhatsApp con la sucursal que elijas.</p>
+      <p class="location-picker-hint" id="location-picker-hint">Te abrimos WhatsApp con la sucursal que elijas.</p>
       <div class="location-picker-options" id="location-picker-options"></div>
     </div>
   </div>
 
+<script src="products.js"></script>
 <script>
 const CONFIG = {
   business: {
@@ -971,7 +1182,68 @@ const CONFIG = {
       text: "Excelente lugar, muy recomendable para adultos y niños, muy buena atención.",
       author: "Javier Bustillo"
     }
-  ]
+  ],
+  products: [
+    {
+      id: "american-crew-daily-cleansing",
+      name: "American Crew Daily Cleansing Shampoo",
+      category: "Champú",
+      teaser: "Limpieza diaria, citrus mint, fórmula vegan.",
+      image: "images/products/american-crew-shampoo.jpg",
+      featured: true,
+      price: null
+    },
+    {
+      id: "american-crew-fiber",
+      name: "American Crew Fiber",
+      category: "Styling",
+      teaser: "High hold, low shine · 50 g.",
+      image: "images/products/american-crew-fiber.jpg",
+      featured: true,
+      price: null
+    },
+    {
+      id: "maxybelt-cera-vibrante",
+      name: "Maxybelt Cera Vibrante",
+      category: "Styling",
+      teaser: "Brillo natural y sensación húmeda · 100 g.",
+      image: "images/products/maxybelt-cera-vibrante.jpg",
+      featured: true,
+      price: null
+    },
+    {
+      id: "maxybelt-caspa-2en1",
+      name: "Don Barbero Shampoo Control Caspa 2 en 1",
+      category: "Champú",
+      teaser: "Uso diario, línea profesional Maxybelt.",
+      image: "images/products/maxybelt-caspa.jpg",
+      featured: true,
+      price: null
+    },
+    {
+      id: "maxybelt-3en1",
+      name: "Don Barbero Shampoo 3 en 1",
+      category: "Champú",
+      teaser: "Cabello, barba y cuerpo.",
+      image: "images/products/maxybelt-3en1.jpg",
+      featured: true,
+      price: null
+    }
+  ],
+  ui: {
+    cartLabel: "Carrito",
+    cartTitle: "Tu carrito",
+    cartClose: "Cerrar carrito",
+    cartEmpty: "Tu carrito está vacío.",
+    cartCheckout: "Pedir por WhatsApp",
+    cartClear: "Vaciar carrito",
+    cartRemove: "Quitar",
+    cartAdded: "Agregado",
+    catalogAddToCart: "Agregar al carrito",
+    cartWhatsAppIntro: "Hola, me interesa este pedido de 0101 Barbershop:",
+    cartWhatsAppOutro: "¿Me confirman disponibilidad y precio?",
+    cartItemLine: "{qty}× {name}"
+  }
 };
 
 (function render(){
@@ -991,8 +1263,9 @@ const CONFIG = {
     }[ch]));
   }
 
-  function waLinkFor(location){
-    const message = `${CONFIG.business.whatsappMessage} (${location.name})`;
+  function waLinkFor(location, customMessage){
+    const base = customMessage || CONFIG.business.whatsappMessage;
+    const message = `${base} (${location.name})`;
     return `https://wa.me/${location.whatsappNumber}?text=${encodeURIComponent(message)}`;
   }
 
@@ -1120,13 +1393,16 @@ const CONFIG = {
   const pickerOptions = document.getElementById("location-picker-options");
   let lastFocus = null;
 
-  pickerOptions.innerHTML = CONFIG.locations.map((location) => `
-    <a class="location-option" href="${esc(waLinkFor(location))}" target="_blank" rel="noopener">
-      <span class="location-option-name">${esc(location.name)}</span>
-      <span class="location-option-meta">${esc(location.phoneDisplay)}</span>
-      ${location.address !== location.name ? `<span class="location-option-meta">${esc(location.address)}</span>` : ""}
-    </a>
-  `).join("");
+  function renderPickerOptions(customMessage){
+    pickerOptions.innerHTML = CONFIG.locations.map((location) => `
+      <a class="location-option" href="${esc(waLinkFor(location, customMessage))}" target="_blank" rel="noopener">
+        <span class="location-option-name">${esc(location.name)}</span>
+        <span class="location-option-meta">${esc(location.phoneDisplay)}</span>
+        ${location.address !== location.name ? `<span class="location-option-meta">${esc(location.address)}</span>` : ""}
+      </a>
+    `).join("");
+  }
+  renderPickerOptions();
 
   function closePicker(){
     if (picker.hidden) return;
@@ -1136,13 +1412,26 @@ const CONFIG = {
     if (lastFocus && typeof lastFocus.focus === "function") lastFocus.focus();
   }
 
-  function openPicker(trigger){
+  function openPicker(trigger, customMessage){
     lastFocus = trigger || document.activeElement;
+    renderPickerOptions(customMessage || null);
+    const hint = document.getElementById("location-picker-hint");
+    if (hint){
+      hint.textContent = customMessage
+        ? "Elegí la sucursal para enviar el pedido por WhatsApp."
+        : "Te abrimos WhatsApp con la sucursal que elijas.";
+    }
     picker.hidden = false;
     picker.setAttribute("aria-hidden", "false");
     document.body.classList.add("picker-open");
     const first = pickerOptions.querySelector("a");
     if (first) first.focus();
+  }
+  window.openLocationPicker = openPicker;
+
+  if (window.ProductsUI){
+    ProductsUI.initCartUI();
+    ProductsUI.initFeaturedMarquee(document.getElementById("products-marquee"));
   }
 
   document.addEventListener("click", (event) => {
