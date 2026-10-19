@@ -751,7 +751,8 @@ const CONFIG = {
   business: {
     name: "0101 Barbershop",
     email: "0101barbershop@gmail.com",
-    whatsappMessage: "Hola, me gustaría agendar una cita en 0101 Barbershop"
+    whatsappMessage: "Hola, me gustaría agendar una cita en 0101 Barbershop",
+    facebook: "https://www.facebook.com/0101BarberShop/"
   },
   hours: [
     { day: "Lunes a sábado", time: "8:00 AM – 7:00 PM" },
@@ -851,6 +852,7 @@ const CONFIG = {
   const pinSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 21c4-3.2 7-6.6 7-10.5A7 7 0 0 0 5 10.5C5 14.4 8 17.8 12 21Z"/><circle cx="12" cy="10.5" r="2.3"/></svg>';
   const phoneSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1.1-.3 1.2.4 2.5.6 3.8.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C11.4 21 3 12.6 3 2.7c0-.6.4-1 1-1H7.7c.6 0 1 .4 1 1 0 1.3.2 2.6.6 3.8.1.4 0 .8-.3 1.1L6.6 10.8Z"/></svg>';
   const instaSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1"/></svg>';
+  const facebookSvg = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M14 9h3V6h-3c-1.7 0-3 1.3-3 3v2H8v3h3v7h3v-7h3l1-3h-4V9c0-.6.4-1 1-1Z"/></svg>';
   const chevron = '<svg class="service-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
   function esc(value){
@@ -909,12 +911,20 @@ const CONFIG = {
   `;
   }).join("");
 
-  const socialHtml = CONFIG.locations.map((location) => `
-    <a class="social-pill" href="${esc(location.instagram)}" target="_blank" rel="noopener" aria-label="Instagram ${esc(location.name)}">
-      ${instaSvg}
-      <span>${esc(location.name)}</span>
-    </a>
-  `).join("");
+  const socialHtml = [
+    ...CONFIG.locations.map((location) => `
+      <a class="social-pill" href="${esc(location.instagram)}" target="_blank" rel="noopener" aria-label="Instagram ${esc(location.name)}">
+        ${instaSvg}
+        <span>${esc(location.name)}</span>
+      </a>
+    `),
+    CONFIG.business.facebook ? `
+      <a class="social-pill" href="${esc(CONFIG.business.facebook)}" target="_blank" rel="noopener" aria-label="Facebook">
+        ${facebookSvg}
+        <span>Facebook</span>
+      </a>
+    ` : ""
+  ].join("");
   document.getElementById("hero-social").innerHTML = socialHtml;
   document.getElementById("social-row").innerHTML = socialHtml;
 
