@@ -472,31 +472,40 @@
     root.classList.toggle("is-reduced", reduced);
     if (reduced) return;
 
-    // JS-driven loop: autoplay + drag. Avoids CSS animation-play-state getting stuck.
+    // JS-driven loop: continuous autoplay + drag. No hover freeze / resume delay.
     let offset = 0;
     let loopWidth = 0;
     let rafId = 0;
     let lastTs = 0;
-    let hovering = false;
     let dragging = false;
     let dragMoved = false;
     let axis = "";
     let pointerId = null;
     let lastX = 0;
+    let lastMoveTs = 0;
     let startX = 0;
     let startY = 0;
-    let velocity = 0;
-    const speed = 0.035; // px per ms (~35px/s)
-    const resumeDelayMs = 900;
-    let resumeTimer = 0;
+    const autoplaySpeed = 0.048; // ~48px/s, steady crawl
+    let velocity = autoplaySpeed; // px per ms — start at cruise speed (no ramp-up lag)
+    let measureTimer = 0;
 
     function measure() {
       const half = track.scrollWidth / 2;
-      loopWidth = half > 0 ? half : 0;
+      const next = half > 0 ? half : 0;
+      if (Math.abs(next - loopWidth) < 0.5) return;
+      loopWidth = next;
       if (loopWidth > 0) {
         offset = ((offset % loopWidth) + loopWidth) % loopWidth;
         track.style.transform = `translate3d(${-offset}px, 0, 0)`;
       }
+    }
+
+    function scheduleMeasure() {
+      if (measureTimer) return;
+      measureTimer = requestAnimationFrame(() => {
+        measureTimer = 0;
+        measure();
+      });
     }
 
     function wrapOffset(value) {
@@ -511,38 +520,23 @@
       track.style.transform = `translate3d(${-offset}px, 0, 0)`;
     }
 
-    function clearResumeTimer() {
-      if (!resumeTimer) return;
-      clearTimeout(resumeTimer);
-      resumeTimer = 0;
-    }
-
-    function scheduleResume() {
-      clearResumeTimer();
-      resumeTimer = setTimeout(() => {
-        resumeTimer = 0;
-        if (!dragging && !hovering) lastTs = 0;
-      }, resumeDelayMs);
-    }
-
     function tick(ts) {
       rafId = requestAnimationFrame(tick);
       if (!loopWidth) return;
-      if (dragging || hovering || resumeTimer) {
-        lastTs = ts;
+      if (!lastTs) lastTs = ts;
+      const dt = Math.min(24, Math.max(0, ts - lastTs));
+      lastTs = ts;
+      if (!dt) return;
+
+      if (dragging && axis === "x") {
+        // Position is updated live in pointermove; keep clock warm.
         return;
       }
-      if (!lastTs) lastTs = ts;
-      const dt = Math.min(32, ts - lastTs);
-      lastTs = ts;
-      // Coast leftover drag velocity briefly, then settle into autoplay.
-      if (Math.abs(velocity) > 0.02) {
-        offset += velocity * dt;
-        velocity *= 0.94;
-      } else {
-        velocity = 0;
-        offset += speed * dt;
-      }
+
+      // Blend drag coast into autoplay so motion never hard-stops.
+      const blend = 1 - Math.exp(-dt / 180);
+      velocity += (autoplaySpeed - velocity) * blend;
+      offset += velocity * dt;
       applyOffset();
     }
 
@@ -555,8 +549,7 @@
       pointerId = event.pointerId;
       startX = lastX = event.clientX;
       startY = event.clientY;
-      velocity = 0;
-      clearResumeTimer();
+      lastMoveTs = event.timeStamp || performance.now();
     }
 
     function onPointerMove(event) {
@@ -574,17 +567,21 @@
             /* ignore */
           }
         } else {
+          // Vertical intent: release and let the page scroll.
           dragging = false;
           pointerId = null;
           return;
         }
       }
       if (axis !== "x") return;
+      const now = event.timeStamp || performance.now();
+      const moveDt = Math.max(8, now - lastMoveTs);
       const dx = event.clientX - lastX;
       dragMoved = true;
       lastX = event.clientX;
+      lastMoveTs = now;
       offset -= dx;
-      velocity = -dx;
+      velocity = -dx / moveDt;
       applyOffset();
       if (event.cancelable) event.preventDefault();
     }
@@ -602,21 +599,18 @@
       pointerId = null;
       axis = "";
       root.classList.remove("is-dragging");
-      if (didMove) {
-        root.dataset.suppressClick = "1";
-        scheduleResume();
-      } else {
-        lastTs = 0;
-      }
+      // Clamp extreme flicks, then keep coasting into autoplay with no delay.
+      velocity = Math.max(-1.2, Math.min(1.2, velocity));
+      if (didMove) root.dataset.suppressClick = "1";
       dragMoved = false;
     }
 
     root.classList.add("is-js-marquee");
     measure();
     requestAnimationFrame(measure);
-    window.addEventListener("resize", measure);
+    window.addEventListener("resize", scheduleMeasure);
     if (typeof ResizeObserver === "function") {
-      const ro = new ResizeObserver(measure);
+      const ro = new ResizeObserver(scheduleMeasure);
       ro.observe(track);
       ro.observe(root);
     }
@@ -626,14 +620,6 @@
     root.addEventListener("pointerup", endDrag);
     root.addEventListener("pointercancel", endDrag);
     root.addEventListener("lostpointercapture", endDrag);
-
-    root.addEventListener("mouseenter", () => {
-      if (window.matchMedia("(hover: hover)").matches) hovering = true;
-    });
-    root.addEventListener("mouseleave", () => {
-      hovering = false;
-      if (!dragging) lastTs = 0;
-    });
 
     // Prevent accidental clicks after a horizontal scrub.
     root.addEventListener(
@@ -646,6 +632,12 @@
       },
       true
     );
+
+    // Keep autoplay running even when the tab is backgrounded briefly —
+    // reset the clock on resume so we don't jump a huge dt.
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") lastTs = 0;
+    });
 
     rafId = requestAnimationFrame(tick);
   }
