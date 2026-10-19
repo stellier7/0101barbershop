@@ -65,16 +65,62 @@
 
   [data-reveal]{
     opacity:0;
-    transform:translateY(36px);
-    transition:opacity .9s var(--ease), transform .9s var(--ease);
+    transform:translateY(48px) scale(0.96);
+    filter:blur(8px);
+    transition:opacity 1s var(--ease), transform 1s var(--ease), filter 1s var(--ease);
     transition-delay:var(--delay,0s);
   }
   [data-reveal].is-visible{
     opacity:1;
-    transform:none;
+    transform:translateY(0) scale(1);
+    filter:blur(0);
   }
+  [data-reveal="scale"]{ transform:scale(0.88); }
+  [data-reveal="scale"].is-visible{ transform:scale(1); }
+
+  .hero .hero-inner [data-reveal]{
+    filter:none;
+    transform:translateX(-56px);
+    opacity:0;
+    transition:opacity .9s var(--ease), transform .9s var(--ease);
+  }
+  .hero .hero-inner [data-reveal].is-visible{
+    transform:translateX(0);
+    opacity:1;
+  }
+  .hero .scroll-cue{
+    filter:none;
+    transform:translateX(-32px);
+    opacity:0;
+    transition:opacity .8s var(--ease) .5s, transform .8s var(--ease) .5s;
+  }
+  .hero .scroll-cue.is-visible{
+    transform:translateX(0);
+    opacity:1;
+  }
+  .hero-meta .item{
+    opacity:0;
+    transform:translateX(-28px);
+    transition:opacity .75s var(--ease), transform .75s var(--ease);
+  }
+  .hero-meta.is-visible .item{
+    opacity:1;
+    transform:translateX(0);
+  }
+  .hero-meta.is-visible .item:nth-child(1){ transition-delay:.38s; }
+  .hero-meta.is-visible .item:nth-child(2){ transition-delay:.48s; }
+  .hero-meta.is-visible .item:nth-child(3){ transition-delay:.58s; }
+
   @media (prefers-reduced-motion: reduce){
-    [data-reveal]{ opacity:1 !important; transform:none !important; transition:none !important; }
+    [data-reveal],
+    .hero .hero-inner [data-reveal],
+    .hero .scroll-cue,
+    .hero-meta .item{
+      opacity:1 !important;
+      transform:none !important;
+      filter:none !important;
+      transition:none !important;
+    }
     *{ scroll-behavior:auto !important; animation:none !important; }
   }
 
@@ -129,15 +175,45 @@
     width:100%; height:100%;
     object-fit:cover;
     object-position:42% 70%;
+    transform:translateZ(0) scale(1.045);
   }
   .hero-media-overlay{
-    position:absolute; inset:0;
+    position:absolute; inset:0; z-index:1;
     background:
       linear-gradient(to right, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.62) 46%, rgba(0,0,0,0.28) 100%),
       linear-gradient(to top, rgba(0,0,0,0.72) 0%, transparent 46%);
   }
+  .hero-field{
+    position:absolute; inset:0; z-index:1; pointer-events:none;
+  }
+  .blob{
+    position:absolute; border-radius:50%;
+    filter:blur(70px);
+    opacity:.35;
+    will-change:transform;
+    transform:translateZ(0);
+  }
+  .blob-a{
+    width:520px; height:520px; top:-160px; right:-120px;
+    background:radial-gradient(circle at 30% 30%, rgba(214,178,94,0.28), transparent 70%);
+  }
+  .blob-b{
+    width:420px; height:420px; bottom:-140px; left:-100px;
+    background:radial-gradient(circle at 60% 40%, rgba(47,107,255,0.22), transparent 70%);
+    opacity:.45;
+  }
+  .blob-c{
+    width:280px; height:280px; top:42%; left:58%;
+    background:radial-gradient(circle, rgba(255,255,255,0.08), transparent 70%);
+    opacity:.55;
+  }
+  .hero-grain{
+    position:absolute; inset:0; z-index:1; pointer-events:none; opacity:.18; mix-blend-mode:screen;
+    background-image:radial-gradient(circle at 1px 1px, rgba(255,255,255,0.08) 1px, transparent 0);
+    background-size:3px 3px;
+  }
   .hero-inner{
-    position:relative; z-index:2;
+    position:relative; z-index:2; will-change:transform;
     width:100%;
     padding:clamp(120px,16vh,160px) clamp(20px,5vw,64px) clamp(88px,12vh,120px);
     max-width:var(--maxw);
@@ -226,7 +302,16 @@
     font-size:12px; letter-spacing:0.08em; text-transform:uppercase;
     color:var(--ink-faint); z-index:2;
   }
-  .scroll-cue .line{ width:32px; height:1px; background:var(--gold); }
+  .scroll-cue .line{
+    width:32px; height:1px; background:rgba(214,178,94,0.35);
+    position:relative; overflow:hidden;
+  }
+  .scroll-cue .line::after{
+    content:''; position:absolute; left:-100%; top:0; width:100%; height:100%;
+    background:var(--gold);
+    animation:cue 2.2s ease-in-out infinite;
+  }
+  @keyframes cue{ 0%{left:-100%;} 50%{left:0;} 100%{left:100%;} }
 
   section{ position:relative; padding:108px 0; scroll-margin-top:84px; }
   .kicker{
@@ -252,14 +337,20 @@
     display:grid; grid-template-columns:0.85fr 1.15fr; gap:56px; align-items:center;
   }
   .about-card{
+    perspective:1400px;
+  }
+  .about-card-inner{
     border-radius:22px;
     overflow:hidden;
     aspect-ratio:4/5;
     border:1px solid rgba(214,178,94,0.35);
     background:#111;
     box-shadow:var(--shadow-lg);
+    transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateZ(0);
+    transition:transform .35s var(--ease), box-shadow .35s var(--ease);
+    will-change:transform;
   }
-  .about-card img{
+  .about-card-inner img{
     width:100%;
     height:100%;
     object-fit:cover;
@@ -339,21 +430,44 @@
   }
   .pricing-note b{ color:var(--gold); font-weight:700; }
 
+  #galeria .wrap{ overflow:visible; }
   .gallery-grid{
     display:grid;
     grid-template-columns:repeat(3, 1fr);
-    gap:12px;
+    gap:18px;
+    padding-bottom:40px;
   }
   .gallery-tile{
+    position:relative;
     margin:0; padding:0; border:0;
     background:#111;
-    border-radius:16px;
+    border-radius:18px;
     overflow:hidden;
     aspect-ratio:3/4;
     cursor:pointer;
+    will-change:transform;
+    transform:translateZ(0);
+    backface-visibility:hidden;
+    box-shadow:0 20px 50px -12px rgba(0,0,0,0.6);
+    transition:box-shadow .5s var(--ease);
   }
-  .gallery-tile img{ width:100%; height:100%; object-fit:cover; }
+  .gallery-tile:nth-child(2){ margin-top:44px; }
+  .gallery-tile:nth-child(3){ margin-top:18px; }
+  .gallery-tile:nth-child(5){ margin-top:28px; }
+  .gallery-tile:hover{ box-shadow:0 28px 60px -10px rgba(0,0,0,0.8); }
+  .gallery-tile .gallery-img{
+    width:100%; height:100%; object-fit:cover;
+    position:absolute; inset:0;
+    will-change:transform;
+    transform:scale(1.12);
+    transition:transform .7s var(--ease);
+  }
+  .gallery-tile:hover .gallery-img{ transform:scale(1.22) !important; }
+  .gallery-tile.in-view .gallery-img{ transition:transform .9s var(--ease); }
   .gallery-tile:focus-visible{ outline:2px solid var(--gold); outline-offset:3px; }
+  @media (hover: none){
+    .gallery-tile:active{ transform:scale(0.98); }
+  }
 
   .testimonials-grid{
     display:grid;
@@ -563,7 +677,11 @@
   @media (max-width: 900px){
     .about-grid, .contact-grid, .maps-grid, .testimonials-grid{ grid-template-columns:1fr; }
     .gallery-grid{ grid-template-columns:1fr 1fr; }
+    .gallery-tile:nth-child(2),
+    .gallery-tile:nth-child(3),
+    .gallery-tile:nth-child(5){ margin-top:0; }
     .hero-img{ object-position:center 62%; }
+    .hero-field, .hero-grain{ display:none; }
     .hero-media-overlay{
       background:
         linear-gradient(to bottom, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.55) 42%, rgba(0,0,0,0.35) 100%),
@@ -598,24 +716,30 @@
       <img src="images/hero.jpg" alt="Barbero de 0101 preparando la máquina" class="hero-img">
       <div class="hero-media-overlay"></div>
     </div>
+    <div class="hero-field">
+      <div class="blob blob-a" data-parallax="0.18"></div>
+      <div class="blob blob-b" data-parallax="0.28"></div>
+      <div class="blob blob-c" data-parallax="0.4"></div>
+    </div>
+    <div class="hero-grain"></div>
     <div class="hero-inner">
-      <div class="eyebrow-row" data-reveal>
+      <div class="eyebrow-row" data-reveal style="--delay:0s">
         <span class="eyebrow-dot"></span>
         <span>Tegucigalpa · Comayagua</span>
       </div>
-      <h1 data-reveal style="--delay:.08s">El corte, con <span class="accent-word">precisión</span>.</h1>
-      <p class="hero-desc" data-reveal style="--delay:.16s">
+      <h1 data-reveal style="--delay:.1s">El corte, con <span class="accent-word">precisión</span>.</h1>
+      <p class="hero-desc" data-reveal style="--delay:.2s">
         0101 Barbershop tiene silla en Plaza Paseo Loarque, Tegucigalpa, y en Premium Plaza, Comayagua. Corte y barba, todos los días.
       </p>
-      <div class="hero-actions" data-reveal style="--delay:.24s">
+      <div class="hero-actions" data-reveal style="--delay:.3s">
         <button type="button" class="btn btn-primary" id="hero-whatsapp" aria-haspopup="dialog">
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.46 1.32 4.96L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.21h.01c5.46 0 9.9-4.45 9.9-9.91 0-2.65-1.03-5.13-2.9-7C17.18 3.03 14.7 2 12.04 2Zm0 18.14h-.01a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.23 8.23 0 0 1-1.26-4.37c0-4.55 3.7-8.25 8.26-8.25 2.2 0 4.27.86 5.83 2.42a8.18 8.18 0 0 1 2.41 5.84c0 4.55-3.71 8.22-8.25 8.22Z"/></svg>
           Agenda por WhatsApp
         </button>
         <a href="#contacto" class="btn btn-ghost">Ver sucursales</a>
       </div>
-      <div class="hero-social" id="hero-social" data-reveal style="--delay:.3s"></div>
-      <div class="hero-meta" data-reveal style="--delay:.36s">
+      <div class="hero-social" id="hero-social" data-reveal style="--delay:.32s"></div>
+      <div class="hero-meta" data-reveal style="--delay:.35s">
         <div class="item">
           <span class="label">Especialidad</span>
           <span class="value">Corte · Barba</span>
@@ -630,15 +754,17 @@
         </div>
       </div>
     </div>
-    <div class="scroll-cue"><span class="line"></span><span>Desliza</span></div>
+    <div class="scroll-cue" id="scroll-cue"><span class="line"></span><span>Desliza</span></div>
   </header>
 
   <section id="barberia">
     <div class="wrap">
       <div class="about">
         <div class="about-grid">
-          <div class="about-card" data-reveal>
-            <img src="images/team.jpg" alt="Equipo de 0101 Barbershop frente al local">
+          <div class="about-card tilt-el" data-tilt data-reveal="scale">
+            <div class="about-card-inner">
+              <img src="images/team.jpg" alt="Equipo de 0101 Barbershop frente al local">
+            </div>
           </div>
           <div class="about-copy">
             <div class="kicker" data-reveal>El equipo</div>
@@ -929,7 +1055,7 @@ const CONFIG = {
   document.getElementById("social-row").innerHTML = socialHtml;
 
   document.getElementById("services-grid").innerHTML = CONFIG.services.map((service, index) => `
-    <div class="service-item${service.hot ? " is-hot" : ""}">
+    <div class="service-item${service.hot ? " is-hot" : ""}" data-reveal style="--delay:${Math.min(index, 6) * 0.05}s">
       <button type="button" class="service-trigger" aria-expanded="false" id="service-trigger-${index}" aria-controls="service-panel-${index}">
         <span class="service-trigger-text">
           <span class="service-heading">
@@ -948,14 +1074,14 @@ const CONFIG = {
     </div>
   `).join("");
 
-  document.getElementById("gallery-grid").innerHTML = CONFIG.gallery.map((item) => `
-    <button type="button" class="gallery-tile" data-full="${esc(item.image)}">
-      <img src="${esc(item.image)}" alt="${esc(item.alt)}">
+  document.getElementById("gallery-grid").innerHTML = CONFIG.gallery.map((item, index) => `
+    <button type="button" class="gallery-tile" data-parallax-tile data-full="${esc(item.image)}" aria-label="${esc(item.alt)}">
+      <img class="gallery-img" src="${esc(item.image)}" alt="${esc(item.alt)}" loading="${index < 3 ? "eager" : "lazy"}">
     </button>
   `).join("");
 
-  document.getElementById("testimonials-grid").innerHTML = CONFIG.testimonials.map((item) => `
-    <article class="testimonial-card" data-reveal>
+  document.getElementById("testimonials-grid").innerHTML = CONFIG.testimonials.map((item, index) => `
+    <article class="testimonial-card" data-reveal style="--delay:${index * 0.08}s">
       <div class="stars" aria-label="5 de 5">★★★★★</div>
       <blockquote>${esc(item.text)}</blockquote>
       <div class="author">${esc(item.author)}</div>
@@ -1034,12 +1160,15 @@ const CONFIG = {
   });
 
   const nav = document.getElementById("nav");
-  const onScroll = () => nav.classList.toggle("scrolled", window.scrollY > 12);
+  const onScroll = () => nav.classList.toggle("scrolled", window.scrollY > 40);
   onScroll();
   window.addEventListener("scroll", onScroll, { passive: true });
 
-  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if (reduce){
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const canHover = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  const isCoarse = window.matchMedia("(pointer: coarse)").matches;
+
+  if (reduced){
     document.querySelectorAll("[data-reveal]").forEach((el) => el.classList.add("is-visible"));
   } else {
     const io = new IntersectionObserver((entries) => {
@@ -1049,8 +1178,188 @@ const CONFIG = {
           io.unobserve(entry.target);
         }
       });
-    }, { threshold: 0.16 });
+    }, {
+      threshold: isCoarse ? 0.06 : 0.12,
+      rootMargin: isCoarse ? "0px" : "0px 0px -30px 0px"
+    });
+    window.__revealIO = io;
     document.querySelectorAll("[data-reveal]").forEach((el) => io.observe(el));
+
+    function revealHeroContent(){
+      document.querySelectorAll(".hero .hero-inner [data-reveal]").forEach((el) => {
+        const delay = parseFloat(el.style.getPropertyValue("--delay")) || 0;
+        setTimeout(() => el.classList.add("is-visible"), delay * 1000);
+      });
+      const meta = document.querySelector(".hero-meta");
+      const cue = document.getElementById("scroll-cue");
+      setTimeout(() => {
+        if (meta) meta.classList.add("is-visible");
+        if (cue) cue.classList.add("is-visible");
+      }, 320);
+    }
+    requestAnimationFrame(revealHeroContent);
+  }
+
+  if (!reduced){
+    const MOTION = {
+      blobScroll: isCoarse ? 0.42 : 0.5,
+      blobPointer: isCoarse ? 8 : 18,
+      blobFloat: isCoarse ? 16 : 20,
+      galleryY: isCoarse ? 60 : 110,
+      galleryX: isCoarse ? 0 : 30,
+      galleryRotate: isCoarse ? 0 : 2.5,
+      galleryScale: isCoarse ? 0.05 : 0.06,
+      tiltMax: canHover ? 14 : 11,
+      tiltScroll: isCoarse ? 12 : 10,
+      heroDrift: isCoarse ? 0.14 : 0.18,
+      heroImgX: isCoarse ? 0 : 8
+    };
+
+    const blobs = document.querySelectorAll("[data-parallax]");
+    const tiles = document.querySelectorAll("[data-parallax-tile]");
+    const heroInner = document.querySelector(".hero-inner");
+    const vh = () => window.innerHeight;
+
+    let ptrX = 0;
+    let ptrY = 0;
+    let ptrOn = false;
+
+    function setPointer(e){
+      ptrX = (e.clientX / window.innerWidth - 0.5) * 2;
+      ptrY = (e.clientY / window.innerHeight - 0.5) * 2;
+      ptrOn = true;
+    }
+    function clearPointer(){
+      ptrOn = false;
+      ptrX = 0;
+      ptrY = 0;
+    }
+
+    if (canHover){
+      window.addEventListener("pointermove", setPointer, { passive: true });
+    } else {
+      window.addEventListener("pointerdown", (e) => { if (e.pointerType === "touch") setPointer(e); }, { passive: true });
+      window.addEventListener("pointermove", (e) => { if (e.pointerType === "touch") setPointer(e); }, { passive: true });
+      window.addEventListener("pointerup", clearPointer, { passive: true });
+      window.addEventListener("pointercancel", clearPointer, { passive: true });
+    }
+
+    document.querySelectorAll("[data-tilt]").forEach((card) => {
+      const inner = card.querySelector(".about-card-inner") || card;
+      const MAX = MOTION.tiltMax;
+      let dragging = false;
+
+      const applyTilt = (cx, cy) => {
+        const r = card.getBoundingClientRect();
+        const px = (cx - r.left) / r.width;
+        const py = (cy - r.top) / r.height;
+        const ry = (px - 0.5) * MAX * 2;
+        const rx = (0.5 - py) * MAX * 2;
+        inner.style.setProperty("--rx", rx.toFixed(2) + "deg");
+        inner.style.setProperty("--ry", ry.toFixed(2) + "deg");
+        if (canHover){
+          inner.style.boxShadow = `${ry * -0.8}px ${rx * 0.8 + 20}px 50px -12px rgba(0,0,0,0.45)`;
+        }
+      };
+      const resetTilt = () => {
+        dragging = false;
+        card.dataset.tiltActive = "";
+        if (!canHover) return;
+        inner.style.setProperty("--rx", "0deg");
+        inner.style.setProperty("--ry", "0deg");
+        inner.style.boxShadow = "";
+      };
+
+      card.addEventListener("pointerdown", (e) => {
+        dragging = true;
+        card.dataset.tiltActive = "1";
+        applyTilt(e.clientX, e.clientY);
+      }, { passive: true });
+      card.addEventListener("pointermove", (e) => {
+        if (dragging || canHover) applyTilt(e.clientX, e.clientY);
+      }, { passive: true });
+      card.addEventListener("pointerup", resetTilt, { passive: true });
+      card.addEventListener("pointercancel", resetTilt, { passive: true });
+      if (canHover) card.addEventListener("pointerleave", resetTilt, { passive: true });
+    });
+
+    if (tiles.length){
+      const galleryIO = new IntersectionObserver((entries) => {
+        entries.forEach((e) => e.target.classList.toggle("in-view", e.isIntersecting));
+      }, { threshold: isCoarse ? 0.35 : 0.45 });
+      tiles.forEach((t) => galleryIO.observe(t));
+    }
+
+    function update(){
+      const y = window.scrollY;
+      const time = Date.now() * 0.001;
+      const viewH = vh();
+
+      blobs.forEach((b, i) => {
+        const speed = parseFloat(b.dataset.parallax) || 0.2;
+        const scrollY = y * speed * -MOTION.blobScroll;
+        const strength = (i + 1) * MOTION.blobPointer;
+        const mx = (canHover || ptrOn) ? ptrX * strength : ptrX * strength * 0.5;
+        const my = (canHover || ptrOn) ? ptrY * strength : ptrY * strength * 0.5;
+        const float = Math.sin(time + i * 1.4) * MOTION.blobFloat;
+        b.style.transform = `translate3d(${mx}px, ${scrollY + my + float}px, 0)`;
+      });
+
+      if (heroInner){
+        const progress = Math.min(y / viewH, 1);
+        if (y < viewH * 1.2){
+          heroInner.style.transform = `translate3d(0, ${y * MOTION.heroDrift}px, 0)`;
+          heroInner.style.opacity = String(1 - progress * 0.35);
+        } else {
+          heroInner.style.transform = "";
+          heroInner.style.opacity = "";
+        }
+      }
+
+      tiles.forEach((t, i) => {
+        const rect = t.getBoundingClientRect();
+        const center = rect.top + rect.height / 2 - viewH / 2;
+        const progress = center / viewH;
+        const dir = i % 2 === 0 ? 1 : -1;
+        const col = i % 3;
+        const offsetY = Math.max(Math.min(progress * -MOTION.galleryY * dir, isCoarse ? 40 : 75), isCoarse ? -40 : -75);
+        const offsetX = isCoarse ? 0 : Math.max(Math.min(progress * MOTION.galleryX * (col - 1), 28), -28);
+        const rotate = isCoarse ? 0 : progress * MOTION.galleryRotate * dir;
+        t.style.transform = `translate3d(${offsetX}px, ${offsetY}px, 0) rotate(${rotate}deg)`;
+
+        const img = t.querySelector(".gallery-img");
+        if (img){
+          const inView = rect.top < viewH && rect.bottom > 0;
+          const dist = Math.min(Math.abs(progress), 1);
+          const scale = inView ? 1.12 + dist * MOTION.galleryScale : 1.12;
+          const imgY = progress * (isCoarse ? -14 : -24);
+          const imgX = isCoarse ? 0 : progress * MOTION.heroImgX * (i % 2 === 0 ? 1 : -1);
+          img.style.transform = `scale(${scale}) translate3d(${imgX}px, ${imgY}px, 0)`;
+        }
+      });
+
+      if (!canHover){
+        document.querySelectorAll("[data-tilt]").forEach((card) => {
+          if (card.dataset.tiltActive) return;
+          const inner = card.querySelector(".about-card-inner") || card;
+          const rect = card.getBoundingClientRect();
+          const center = rect.top + rect.height / 2 - viewH / 2;
+          const progress = Math.max(Math.min(center / (viewH / 2), 1), -1);
+          const rx = progress * -MOTION.tiltScroll;
+          const ry = progress * (MOTION.tiltScroll * 0.7);
+          inner.style.setProperty("--rx", rx.toFixed(2) + "deg");
+          inner.style.setProperty("--ry", ry.toFixed(2) + "deg");
+        });
+      }
+    }
+
+    (function loop(){ update(); requestAnimationFrame(loop); })();
+    window.addEventListener("resize", update, { passive: true });
+    window.addEventListener("orientationchange", () => setTimeout(update, 150), { passive: true });
+  }
+
+  if (!reduced && window.__revealIO){
+    document.querySelectorAll("[data-reveal]:not(.is-visible)").forEach((el) => window.__revealIO.observe(el));
   }
 })();
 </script>
