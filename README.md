@@ -11,3 +11,4 @@ El contenido editable (sucursales, WhatsApp, horario, servicios e Instagram) est
 | Equipo | `images/team.jpg` |
 | Interior | `images/interior.jpg` |
 | Cortes | `images/gallery/` |
+| Productos | `images/products/` |
