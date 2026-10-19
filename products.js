@@ -355,9 +355,10 @@
     const img = document.createElement("img");
     img.src = product.image || "";
     img.alt = product.name || "";
-    img.loading = "lazy";
+    img.loading = opts.eager ? "eager" : "lazy";
     img.decoding = "async";
     img.draggable = false;
+    if (opts.eager) img.fetchPriority = "high";
     media.appendChild(img);
 
     const body = document.createElement("div");
@@ -456,23 +457,197 @@
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     track.innerHTML = "";
     const appendSet = () => {
-      products.forEach((product) => track.appendChild(createProductCard(product, { showAdd: true })));
+      products.forEach((product) =>
+        track.appendChild(
+          createProductCard(product, {
+            showAdd: true,
+            // Eager load so the duplicated loop half never flashes empty/black.
+            eager: !reduced
+          })
+        )
+      );
     };
     appendSet();
     if (!reduced) appendSet();
     root.classList.toggle("is-reduced", reduced);
     if (reduced) return;
 
-    const pause = () => root.classList.add("is-paused");
-    const resume = () => root.classList.remove("is-paused");
-    root.addEventListener("mouseenter", pause);
-    root.addEventListener("mouseleave", resume);
-    root.addEventListener("pointerdown", (event) => {
+    // JS-driven loop: autoplay + drag. Avoids CSS animation-play-state getting stuck.
+    let offset = 0;
+    let loopWidth = 0;
+    let rafId = 0;
+    let lastTs = 0;
+    let hovering = false;
+    let dragging = false;
+    let dragMoved = false;
+    let axis = "";
+    let pointerId = null;
+    let lastX = 0;
+    let startX = 0;
+    let startY = 0;
+    let velocity = 0;
+    const speed = 0.035; // px per ms (~35px/s)
+    const resumeDelayMs = 900;
+    let resumeTimer = 0;
+
+    function measure() {
+      const half = track.scrollWidth / 2;
+      loopWidth = half > 0 ? half : 0;
+      if (loopWidth > 0) {
+        offset = ((offset % loopWidth) + loopWidth) % loopWidth;
+        track.style.transform = `translate3d(${-offset}px, 0, 0)`;
+      }
+    }
+
+    function wrapOffset(value) {
+      if (loopWidth <= 0) return 0;
+      let next = value % loopWidth;
+      if (next < 0) next += loopWidth;
+      return next;
+    }
+
+    function applyOffset() {
+      offset = wrapOffset(offset);
+      track.style.transform = `translate3d(${-offset}px, 0, 0)`;
+    }
+
+    function clearResumeTimer() {
+      if (!resumeTimer) return;
+      clearTimeout(resumeTimer);
+      resumeTimer = 0;
+    }
+
+    function scheduleResume() {
+      clearResumeTimer();
+      resumeTimer = setTimeout(() => {
+        resumeTimer = 0;
+        if (!dragging && !hovering) lastTs = 0;
+      }, resumeDelayMs);
+    }
+
+    function tick(ts) {
+      rafId = requestAnimationFrame(tick);
+      if (!loopWidth) return;
+      if (dragging || hovering || resumeTimer) {
+        lastTs = ts;
+        return;
+      }
+      if (!lastTs) lastTs = ts;
+      const dt = Math.min(32, ts - lastTs);
+      lastTs = ts;
+      // Coast leftover drag velocity briefly, then settle into autoplay.
+      if (Math.abs(velocity) > 0.02) {
+        offset += velocity * dt;
+        velocity *= 0.94;
+      } else {
+        velocity = 0;
+        offset += speed * dt;
+      }
+      applyOffset();
+    }
+
+    function onPointerDown(event) {
       if (event.pointerType === "mouse" && event.button !== 0) return;
-      pause();
-    }, { passive: true });
-    root.addEventListener("pointerup", resume, { passive: true });
-    root.addEventListener("pointercancel", resume, { passive: true });
+      if (event.target.closest(".product-card-add")) return;
+      dragging = true;
+      dragMoved = false;
+      axis = "";
+      pointerId = event.pointerId;
+      startX = lastX = event.clientX;
+      startY = event.clientY;
+      velocity = 0;
+      clearResumeTimer();
+    }
+
+    function onPointerMove(event) {
+      if (!dragging || event.pointerId !== pointerId) return;
+      const dxTotal = event.clientX - startX;
+      const dyTotal = event.clientY - startY;
+      if (!axis) {
+        if (Math.abs(dxTotal) < 6 && Math.abs(dyTotal) < 6) return;
+        axis = Math.abs(dxTotal) > Math.abs(dyTotal) ? "x" : "y";
+        if (axis === "x") {
+          root.classList.add("is-dragging");
+          try {
+            root.setPointerCapture(event.pointerId);
+          } catch (_) {
+            /* ignore */
+          }
+        } else {
+          dragging = false;
+          pointerId = null;
+          return;
+        }
+      }
+      if (axis !== "x") return;
+      const dx = event.clientX - lastX;
+      dragMoved = true;
+      lastX = event.clientX;
+      offset -= dx;
+      velocity = -dx;
+      applyOffset();
+      if (event.cancelable) event.preventDefault();
+    }
+
+    function endDrag(event) {
+      if (pointerId != null && event && event.pointerId !== pointerId && event.type !== "lostpointercapture") {
+        return;
+      }
+      if (!dragging && !root.classList.contains("is-dragging")) {
+        pointerId = null;
+        return;
+      }
+      const didMove = dragMoved;
+      dragging = false;
+      pointerId = null;
+      axis = "";
+      root.classList.remove("is-dragging");
+      if (didMove) {
+        root.dataset.suppressClick = "1";
+        scheduleResume();
+      } else {
+        lastTs = 0;
+      }
+      dragMoved = false;
+    }
+
+    root.classList.add("is-js-marquee");
+    measure();
+    requestAnimationFrame(measure);
+    window.addEventListener("resize", measure);
+    if (typeof ResizeObserver === "function") {
+      const ro = new ResizeObserver(measure);
+      ro.observe(track);
+      ro.observe(root);
+    }
+
+    root.addEventListener("pointerdown", onPointerDown);
+    root.addEventListener("pointermove", onPointerMove, { passive: false });
+    root.addEventListener("pointerup", endDrag);
+    root.addEventListener("pointercancel", endDrag);
+    root.addEventListener("lostpointercapture", endDrag);
+
+    root.addEventListener("mouseenter", () => {
+      if (window.matchMedia("(hover: hover)").matches) hovering = true;
+    });
+    root.addEventListener("mouseleave", () => {
+      hovering = false;
+      if (!dragging) lastTs = 0;
+    });
+
+    // Prevent accidental clicks after a horizontal scrub.
+    root.addEventListener(
+      "click",
+      (event) => {
+        if (!root.dataset.suppressClick) return;
+        event.preventDefault();
+        event.stopPropagation();
+        delete root.dataset.suppressClick;
+      },
+      true
+    );
+
+    rafId = requestAnimationFrame(tick);
   }
 
   function initCatalogPage() {
