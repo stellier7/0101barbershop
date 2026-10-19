@@ -256,8 +256,14 @@
     overflow:hidden;
     aspect-ratio:4/5;
     border:1px solid rgba(214,178,94,0.35);
-    background:#111 center 68%/cover no-repeat;
+    background:#111;
     box-shadow:var(--shadow-lg);
+  }
+  .about-card img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    object-position:center 20%;
   }
   .about-copy .lede{
     font-family:'Cinzel', serif;
@@ -285,9 +291,21 @@
     padding:20px 22px;
     background:transparent; border:none; text-align:left;
   }
+  .service-trigger-text{ display:block; flex:1; min-width:0; }
   .service-trigger:hover{ background:rgba(255,255,255,0.03); }
   .service-trigger:focus-visible{ outline:2px solid var(--gold); outline-offset:-2px; }
+  .service-heading{
+    display:flex; align-items:baseline; justify-content:space-between; gap:16px;
+    width:100%;
+  }
   .service-trigger h3{ font-size:clamp(18px,2vw,22px); }
+  .service-price{
+    font-family:'Cinzel', serif;
+    color:var(--gold);
+    font-size:16px;
+    letter-spacing:0.03em;
+    white-space:nowrap;
+  }
   .service-teaser{ margin-top:6px; color:var(--ink-soft); font-size:14.5px; }
   .service-chevron{
     width:28px; height:28px; flex:none; margin-top:2px;
@@ -320,6 +338,74 @@
     font-size:14.5px;
   }
   .pricing-note b{ color:var(--gold); font-weight:700; }
+
+  .gallery-grid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:12px;
+  }
+  .gallery-tile{
+    margin:0; padding:0; border:0;
+    background:#111;
+    border-radius:16px;
+    overflow:hidden;
+    aspect-ratio:3/4;
+    cursor:pointer;
+  }
+  .gallery-tile img{ width:100%; height:100%; object-fit:cover; }
+  .gallery-tile:focus-visible{ outline:2px solid var(--gold); outline-offset:3px; }
+
+  .testimonials-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+  }
+  .testimonial-card{
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:22px 22px 18px;
+    background:rgba(255,255,255,0.02);
+  }
+  .testimonial-card .stars{ color:var(--gold); letter-spacing:3px; font-size:13px; }
+  .testimonial-card blockquote{
+    margin:12px 0 14px;
+    font-family:'Cinzel', serif;
+    font-size:clamp(16px,1.6vw,20px);
+    line-height:1.4;
+  }
+  .testimonial-card .author{
+    color:var(--ink-faint);
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+  }
+
+  .lightbox{
+    position:fixed; inset:0; z-index:220;
+    display:grid; place-items:center;
+    padding:24px;
+  }
+  .lightbox[hidden]{ display:none !important; }
+  .lightbox-backdrop{
+    position:absolute; inset:0;
+    background:rgba(0,0,0,0.82);
+    border:0;
+  }
+  .lightbox-img{
+    position:relative; z-index:1;
+    max-width:min(960px, 100%);
+    max-height:min(86vh, 100%);
+    border-radius:16px;
+    box-shadow:var(--shadow-lg);
+  }
+  .lightbox-close{
+    position:absolute; top:16px; right:16px; z-index:2;
+    width:40px; height:40px; border-radius:50%;
+    border:1px solid var(--line);
+    background:#111; color:#fff;
+    font-size:22px; line-height:1;
+  }
 
   .maps-grid{
     display:grid;
@@ -475,7 +561,8 @@
   .location-option-meta{ font-size:13.5px; color:var(--ink-soft); }
 
   @media (max-width: 900px){
-    .about-grid, .contact-grid, .maps-grid{ grid-template-columns:1fr; }
+    .about-grid, .contact-grid, .maps-grid, .testimonials-grid{ grid-template-columns:1fr; }
+    .gallery-grid{ grid-template-columns:1fr 1fr; }
     .hero-img{ object-position:center 62%; }
     .hero-media-overlay{
       background:
@@ -518,7 +605,7 @@
       </div>
       <h1 data-reveal style="--delay:.08s">El corte, con <span class="accent-word">precisión</span>.</h1>
       <p class="hero-desc" data-reveal style="--delay:.16s">
-        0101 Barbershop tiene silla en Tegucigalpa y en Premium Plaza, Comayagua. Corte, degradado y barba, todos los días.
+        0101 Barbershop tiene silla en Plaza Paseo Loarque, Tegucigalpa, y en Premium Plaza, Comayagua. Corte y barba, todos los días.
       </p>
       <div class="hero-actions" data-reveal style="--delay:.24s">
         <button type="button" class="btn btn-primary" id="hero-whatsapp" aria-haspopup="dialog">
@@ -550,11 +637,13 @@
     <div class="wrap">
       <div class="about">
         <div class="about-grid">
-          <div class="about-card" id="about-card" data-reveal role="img" aria-label="Detalle del trabajo en 0101 Barbershop"></div>
+          <div class="about-card" data-reveal>
+            <img src="images/team.jpg" alt="Equipo de 0101 Barbershop frente al local">
+          </div>
           <div class="about-copy">
-            <div class="kicker" data-reveal>La barbería</div>
-            <p class="lede" data-reveal style="--delay:.06s">Dos sucursales y el mismo estándar: la línea limpia, la barba definida y el tiempo que el corte pide.</p>
-            <p class="body-p" data-reveal style="--delay:.12s">Abre de lunes a sábado de 8:00 AM a 7:00 PM y los domingos de 9:00 AM a 6:00 PM. Escribe por WhatsApp a Tegucigalpa o a Comayagua y aparta tu silla.</p>
+            <div class="kicker" data-reveal>El equipo</div>
+            <p class="lede" data-reveal style="--delay:.06s">Cuatro barberos y el mismo corte: limpio, rápido y como lo pediste.</p>
+            <p class="body-p" data-reveal style="--delay:.12s">En Tegucigalpa la silla está en Plaza Paseo Loarque, salida al sur. En Comayagua, en Premium Plaza. Abre de lunes a sábado de 8:00 AM a 7:00 PM y los domingos de 9:00 AM a 6:00 PM.</p>
           </div>
         </div>
       </div>
@@ -566,10 +655,30 @@
       <div class="section-head">
         <div class="kicker" data-reveal>Servicios</div>
         <h2 data-reveal style="--delay:.05s">Lo que se hace en la silla</h2>
-        <p data-reveal style="--delay:.1s">Corte, degradado y barba. La tarifa de cada sucursal se confirma por WhatsApp.</p>
+        <p data-reveal style="--delay:.1s">Corte, barba y el combo. Precios en lempiras, en las dos sucursales.</p>
       </div>
       <div class="services-accordion" id="services-grid"></div>
-      <p class="pricing-note" data-reveal><b>Tarifas:</b> consulta el precio por WhatsApp en la sucursal que vas a visitar.</p>
+      <p class="pricing-note" data-reveal><b>Lempiras.</b> El degradado va incluido en el corte.</p>
+    </div>
+  </section>
+
+  <section id="galeria">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="kicker" data-reveal>Galería</div>
+        <h2 data-reveal style="--delay:.05s">La silla y el corte</h2>
+      </div>
+      <div class="gallery-grid" id="gallery-grid"></div>
+    </div>
+  </section>
+
+  <section id="resenas">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="kicker" data-reveal>Reseñas</div>
+        <h2 data-reveal style="--delay:.05s">Lo que dicen en la silla</h2>
+      </div>
+      <div class="testimonials-grid" id="testimonials-grid"></div>
     </div>
   </section>
 
@@ -619,6 +728,12 @@
     <div class="foot-credit">Desarrollado por <a href="https://www.iagodigital.com/" target="_blank" rel="noopener">IAGO Digital</a></div>
   </footer>
 
+  <div class="lightbox" id="lightbox" hidden>
+    <button type="button" class="lightbox-backdrop" id="lightbox-backdrop" aria-label="Cerrar foto"></button>
+    <button type="button" class="lightbox-close" id="lightbox-close" aria-label="Cerrar">×</button>
+    <img class="lightbox-img" id="lightbox-img" alt="">
+  </div>
+
   <div class="location-picker" id="location-picker" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="location-picker-title">
     <button type="button" class="location-picker-backdrop" id="location-picker-backdrop" aria-label="Cerrar"></button>
     <div class="location-picker-panel">
@@ -646,7 +761,7 @@ const CONFIG = {
     {
       id: "tegucigalpa",
       name: "Tegucigalpa",
-      address: "Tegucigalpa",
+      address: "Plaza Paseo Loarque, salida al sur",
       phoneDisplay: "+504 8844-4391",
       whatsappNumber: "50488444391",
       mapsUrl: "https://maps.app.goo.gl/3aZDA6VBnpMV7cAz8",
@@ -667,24 +782,67 @@ const CONFIG = {
   services: [
     {
       name: "Corte",
-      teaser: "A la medida de tu estilo.",
-      desc: "Corte definido según cómo llevas el cabello y lo que pidas en la silla.",
+      price: "L 170",
+      teaser: "Clásico o degradado, en la misma tarifa.",
+      desc: "Corte a como lo pidas. El degradado va incluido.",
       hot: true
     },
     {
-      name: "Degradado",
-      teaser: "Transición limpia y contorno definido.",
-      desc: "Degradado con la línea pareja, del bajo hacia arriba."
-    },
-    {
       name: "Barba",
-      teaser: "Perfilado y acabado.",
-      desc: "Recorte, línea y definición de barba y bigote."
+      price: "L 170",
+      teaser: "Perfilado de barba y bigote.",
+      desc: "Recorte, línea de mejilla y acabado."
     },
     {
       name: "Corte y barba",
+      price: "L 300",
       teaser: "Las dos cosas, en una cita.",
-      desc: "Corte y arreglo de barba en la misma silla."
+      desc: "Corte y arreglo de barba en la misma silla.",
+      hot: true
+    },
+    {
+      name: "Corte infantil",
+      price: "L 130",
+      teaser: "Para niños, con la misma atención.",
+      desc: "Corte para niños, por debajo de la tarifa de adulto."
+    },
+    {
+      name: "Cejas",
+      price: "L 50",
+      teaser: "Perfilado rápido.",
+      desc: "Definición de cejas para acompañar el corte."
+    },
+    {
+      name: "Diseño",
+      price: "L 80",
+      teaser: "Líneas y contorno.",
+      desc: "Diseño de línea en el corte o en la barba, cuando lo pides aparte."
+    }
+  ],
+  gallery: [
+    { image: "images/interior.jpg", alt: "Sillas y estación de 0101 Barbershop" },
+    { image: "images/gallery/fade.jpg", alt: "Degradado en la silla" },
+    { image: "images/gallery/beard.jpg", alt: "Barba perfilada" },
+    { image: "images/gallery/classic-cut.jpg", alt: "Corte terminado" },
+    { image: "images/gallery/lineup.jpg", alt: "Detalle del contorno con máquina" },
+    { image: "images/hero.jpg", alt: "Preparación de la máquina" }
+  ],
+  testimonials: [
+    {
+      text: "Buen corte y rápido, me gusta que el barbero era calladito.",
+      author: "Marito"
+    },
+    {
+      text: "Muy buen servicio y los barberos, de primera. Buen ambiente, bien acondicionado. Recomendados.",
+      author: "Carlos Muñoz"
+    },
+    {
+      text: "Excelente corte de pelo, tal como solicité, sumado a la amabilidad de todos.",
+      author: "Juan Carlos Rodríguez"
+    },
+    {
+      text: "Excelente lugar, muy recomendable para adultos y niños, muy buena atención.",
+      author: "Javier Bustillo"
     }
   ]
 };
@@ -709,9 +867,6 @@ const CONFIG = {
     const message = `${CONFIG.business.whatsappMessage} (${location.name})`;
     return `https://wa.me/${location.whatsappNumber}?text=${encodeURIComponent(message)}`;
   }
-
-  const about = document.getElementById("about-card");
-  about.style.backgroundImage = "url('images/hero.jpg')";
 
   document.getElementById("contact-email").textContent = CONFIG.business.email;
   document.getElementById("contact-email").href = `mailto:${CONFIG.business.email}`;
@@ -767,7 +922,10 @@ const CONFIG = {
     <div class="service-item${service.hot ? " is-hot" : ""}">
       <button type="button" class="service-trigger" aria-expanded="false" id="service-trigger-${index}" aria-controls="service-panel-${index}">
         <span class="service-trigger-text">
-          <h3>${esc(service.name)}</h3>
+          <span class="service-heading">
+            <h3>${esc(service.name)}</h3>
+            <span class="service-price">${esc(service.price)}</span>
+          </span>
           <p class="service-teaser">${esc(service.teaser)}</p>
         </span>
         ${chevron}
@@ -779,6 +937,39 @@ const CONFIG = {
       </div>
     </div>
   `).join("");
+
+  document.getElementById("gallery-grid").innerHTML = CONFIG.gallery.map((item) => `
+    <button type="button" class="gallery-tile" data-full="${esc(item.image)}">
+      <img src="${esc(item.image)}" alt="${esc(item.alt)}">
+    </button>
+  `).join("");
+
+  document.getElementById("testimonials-grid").innerHTML = CONFIG.testimonials.map((item) => `
+    <article class="testimonial-card" data-reveal>
+      <div class="stars" aria-label="5 de 5">★★★★★</div>
+      <blockquote>${esc(item.text)}</blockquote>
+      <div class="author">${esc(item.author)}</div>
+    </article>
+  `).join("");
+
+  const lightbox = document.getElementById("lightbox");
+  const lightboxImg = document.getElementById("lightbox-img");
+  document.getElementById("gallery-grid").addEventListener("click", (event) => {
+    const tile = event.target.closest(".gallery-tile");
+    if (!tile) return;
+    lightboxImg.src = tile.dataset.full;
+    lightboxImg.alt = tile.querySelector("img").alt;
+    lightbox.hidden = false;
+    document.body.classList.add("picker-open");
+  });
+  function closeLightbox(){
+    if (lightbox.hidden) return;
+    lightbox.hidden = true;
+    lightboxImg.src = "";
+    document.body.classList.remove("picker-open");
+  }
+  document.getElementById("lightbox-close").addEventListener("click", closeLightbox);
+  document.getElementById("lightbox-backdrop").addEventListener("click", closeLightbox);
 
   document.getElementById("services-grid").addEventListener("click", (event) => {
     const trigger = event.target.closest(".service-trigger");
@@ -827,7 +1018,9 @@ const CONFIG = {
     if (event.target.closest("#location-picker-close, #location-picker-backdrop")) closePicker();
   });
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") closePicker();
+    if (event.key !== "Escape") return;
+    closeLightbox();
+    closePicker();
   });
 
   const nav = document.getElementById("nav");
