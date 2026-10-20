@@ -790,7 +790,10 @@
     -webkit-mask-image:linear-gradient(to right, transparent 0, #000 var(--marquee-fade), #000 calc(100% - var(--marquee-fade)), transparent 100%);
     mask-image:linear-gradient(to right, transparent 0, #000 var(--marquee-fade), #000 calc(100% - var(--marquee-fade)), transparent 100%);
   }
-  .products-marquee.is-dragging{ cursor:grabbing; }
+  .products-marquee.is-dragging{
+    cursor:grabbing;
+    touch-action:none;
+  }
   .products-marquee.is-dragging .product-card,
   .products-marquee.is-dragging .product-card-add{
     pointer-events:none;

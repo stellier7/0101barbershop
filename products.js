@@ -472,7 +472,7 @@
     root.classList.toggle("is-reduced", reduced);
     if (reduced) return;
 
-    // JS-driven loop: continuous autoplay + drag. No hover freeze / resume delay.
+    // JS-driven loop: 1:1 drag + flick momentum (like native scroll), then cruise.
     let offset = 0;
     let loopWidth = 0;
     let rafId = 0;
@@ -485,9 +485,13 @@
     let lastMoveTs = 0;
     let startX = 0;
     let startY = 0;
-    const autoplaySpeed = 0.048; // ~48px/s, steady crawl
-    let velocity = autoplaySpeed; // px per ms — start at cruise speed (no ramp-up lag)
+    const autoplaySpeed = 0.048; // ~48px/s cruise
+    const friction = 0.00135; // coast half-life ~500ms
+    const maxFlick = 3.5; // px/ms (~3500px/s)
+    let velocity = autoplaySpeed;
+    let coasting = false;
     let measureTimer = 0;
+    let moveSamples = []; // recent {t, dx} for flick velocity
 
     function measure() {
       const half = track.scrollWidth / 2;
@@ -520,22 +524,43 @@
       track.style.transform = `translate3d(${-offset}px, 0, 0)`;
     }
 
+    function pushSample(dx, time) {
+      moveSamples.push({ t: time, dx: dx });
+      const cutoff = time - 120;
+      while (moveSamples.length && moveSamples[0].t < cutoff) moveSamples.shift();
+    }
+
+    function flickVelocityFromSamples() {
+      if (moveSamples.length < 1) return velocity;
+      let totalDx = 0;
+      const start = moveSamples[0].t;
+      const end = moveSamples[moveSamples.length - 1].t;
+      for (let i = 0; i < moveSamples.length; i += 1) totalDx += moveSamples[i].dx;
+      const span = Math.max(16, end - start);
+      return -totalDx / span;
+    }
+
     function tick(ts) {
       rafId = requestAnimationFrame(tick);
       if (!loopWidth) return;
       if (!lastTs) lastTs = ts;
-      const dt = Math.min(24, Math.max(0, ts - lastTs));
+      const dt = Math.min(32, Math.max(0, ts - lastTs));
       lastTs = ts;
       if (!dt) return;
 
-      if (dragging && axis === "x") {
-        // Position is updated live in pointermove; keep clock warm.
-        return;
+      if (dragging && axis === "x") return;
+
+      if (coasting) {
+        // Native-like inertia: friction decay, then ease back into cruise.
+        velocity *= Math.exp(-friction * dt);
+        if (Math.abs(velocity) <= autoplaySpeed * 1.15) {
+          velocity = autoplaySpeed;
+          coasting = false;
+        }
+      } else {
+        velocity = autoplaySpeed;
       }
 
-      // Blend drag coast into autoplay so motion never hard-stops.
-      const blend = 1 - Math.exp(-dt / 180);
-      velocity += (autoplaySpeed - velocity) * blend;
       offset += velocity * dt;
       applyOffset();
     }
@@ -545,11 +570,14 @@
       if (event.target.closest(".product-card-add")) return;
       dragging = true;
       dragMoved = false;
+      coasting = false;
       axis = "";
       pointerId = event.pointerId;
       startX = lastX = event.clientX;
       startY = event.clientY;
       lastMoveTs = event.timeStamp || performance.now();
+      moveSamples = [];
+      velocity = 0;
     }
 
     function onPointerMove(event) {
@@ -557,7 +585,7 @@
       const dxTotal = event.clientX - startX;
       const dyTotal = event.clientY - startY;
       if (!axis) {
-        if (Math.abs(dxTotal) < 6 && Math.abs(dyTotal) < 6) return;
+        if (Math.abs(dxTotal) < 4 && Math.abs(dyTotal) < 4) return;
         axis = Math.abs(dxTotal) > Math.abs(dyTotal) ? "x" : "y";
         if (axis === "x") {
           root.classList.add("is-dragging");
@@ -567,21 +595,35 @@
             /* ignore */
           }
         } else {
-          // Vertical intent: release and let the page scroll.
           dragging = false;
           pointerId = null;
+          velocity = autoplaySpeed;
           return;
         }
       }
       if (axis !== "x") return;
-      const now = event.timeStamp || performance.now();
-      const moveDt = Math.max(8, now - lastMoveTs);
-      const dx = event.clientX - lastX;
-      dragMoved = true;
-      lastX = event.clientX;
-      lastMoveTs = now;
-      offset -= dx;
-      velocity = -dx / moveDt;
+
+      const coalesced =
+        typeof event.getCoalescedEvents === "function" && event.getCoalescedEvents().length
+          ? event.getCoalescedEvents()
+          : [event];
+
+      for (let i = 0; i < coalesced.length; i += 1) {
+        const point = coalesced[i];
+        const now = point.timeStamp || event.timeStamp || performance.now();
+        const dx = point.clientX - lastX;
+        if (dx === 0 && i < coalesced.length - 1) continue;
+        // 1:1 with the finger — same feel as scrolling the page.
+        offset -= dx;
+        pushSample(dx, now);
+        lastX = point.clientX;
+        lastMoveTs = now;
+        dragMoved = true;
+      }
+
+      if (moveSamples.length) {
+        velocity = flickVelocityFromSamples();
+      }
       applyOffset();
       if (event.cancelable) event.preventDefault();
     }
@@ -599,9 +641,21 @@
       pointerId = null;
       axis = "";
       root.classList.remove("is-dragging");
-      // Clamp extreme flicks, then keep coasting into autoplay with no delay.
-      velocity = Math.max(-1.2, Math.min(1.2, velocity));
-      if (didMove) root.dataset.suppressClick = "1";
+
+      if (didMove) {
+        let flick = flickVelocityFromSamples();
+        // If the finger paused before lift, prefer the earlier swipe samples.
+        const idle = (event && event.timeStamp ? event.timeStamp : performance.now()) - lastMoveTs;
+        if (idle > 80) flick *= Math.max(0, 1 - (idle - 80) / 140);
+        velocity = Math.max(-maxFlick, Math.min(maxFlick, flick));
+        coasting = Math.abs(velocity) > autoplaySpeed * 1.5;
+        if (!coasting) velocity = autoplaySpeed;
+        root.dataset.suppressClick = "1";
+      } else {
+        velocity = autoplaySpeed;
+        coasting = false;
+      }
+      moveSamples = [];
       dragMoved = false;
     }
 
@@ -621,7 +675,6 @@
     root.addEventListener("pointercancel", endDrag);
     root.addEventListener("lostpointercapture", endDrag);
 
-    // Prevent accidental clicks after a horizontal scrub.
     root.addEventListener(
       "click",
       (event) => {
@@ -633,8 +686,6 @@
       true
     );
 
-    // Keep autoplay running even when the tab is backgrounded briefly —
-    // reset the clock on resume so we don't jump a huge dt.
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible") lastTs = 0;
     });
