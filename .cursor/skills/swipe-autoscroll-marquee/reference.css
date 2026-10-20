@@ -1,0 +1,65 @@
+/* Infinite swipe + autoscroll marquee — drop into the site stylesheet */
+
+.products-marquee {
+  position: relative;
+  overflow: hidden;
+  touch-action: pan-y;
+  cursor: grab;
+  --marquee-fade: clamp(28px, 6vw, 72px);
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 var(--marquee-fade),
+    #000 calc(100% - var(--marquee-fade)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 var(--marquee-fade),
+    #000 calc(100% - var(--marquee-fade)),
+    transparent 100%
+  );
+}
+
+.products-marquee.is-dragging {
+  cursor: grabbing;
+  touch-action: none;
+}
+
+.products-marquee.is-dragging .product-card,
+.products-marquee.is-dragging .product-card-add {
+  pointer-events: none;
+}
+
+.products-marquee-track {
+  display: flex;
+  gap: 18px;
+  width: max-content;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+}
+
+.products-marquee.is-js-marquee .products-marquee-track {
+  animation: none;
+}
+
+/* prefers-reduced-motion fallback */
+.products-marquee.is-reduced {
+  -webkit-mask-image: none;
+  mask-image: none;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+  cursor: auto;
+  touch-action: auto;
+}
+
+.products-marquee.is-reduced .products-marquee-track {
+  transform: none !important;
+}
+
+.products-marquee.is-reduced .product-card {
+  scroll-snap-align: start;
+}
